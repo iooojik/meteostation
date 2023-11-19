@@ -23,7 +23,11 @@ int write2Eeprom(int addr, String data)
     {
         EEPROM.write(addr + 1 + i, data[i]);
     }
-    commmit();
+    bool result = commmit();
+    if (!result)
+    {
+        return -1;
+    }
     delay(100);
     return addr + 1 + len;
 }

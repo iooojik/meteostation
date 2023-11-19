@@ -4,22 +4,42 @@
 #include <esp.h>
 
 #define DHT_PIN 2
-#define CHECK_PERIOD 300e6 // in seconds
+#define CHECK_PERIOD 5e6 // in seconds
 
-DhtSensor* dhtSensor;
+DhtSensor *dhtSensor;
 
 void setup()
 {
   Serial.begin(115200);
-  DHT d(DHT_PIN, DHT11);
-  DhtSensor sensor = DhtSensor(d);
-  dhtSensor = &sensor;
+  Serial.println("Setup starting...");
+
+  Serial.println("Setup starting...");
+
+  dhtSensor = new DhtSensor(DHT_PIN);
+  Serial.println("Setup complete.");
+
+  EEPROM.begin(MAX_BUFF_SIZE);
   setupWifiMode();
-  delay(1000);
+  delay(5 * 1000);
+}
+
+void measureAndPrint()
+{
+  float humidity = dhtSensor->readHumidity();
+  float temperature = dhtSensor->readTemp();
+
+  if (isnan(temperature))
+  {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  sendData(humidity, "humidity");
+  sendData(temperature, "temperature");
 }
 
 void loop()
 {
+
   switch (EspMode::espMode)
   {
   case Mode::ACCESS_POINT:
@@ -37,13 +57,13 @@ void loop()
   switch (state)
   {
   case SLEEP:
+    Serial.println("sleeping");
     ESP.deepSleep(CHECK_PERIOD);
+    state = MEASURING;
     break;
   case MEASURING:
-    float temp = dhtSensor->readTemp();
-    sendData(temp, "temperature");
-    float humid = dhtSensor->readTemp();
-    sendData(humid, "humidity");
+    Serial.println("Measuring");
+    measureAndPrint();
     state = SLEEP;
     break;
   }

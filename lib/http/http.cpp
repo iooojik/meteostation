@@ -24,8 +24,8 @@ bool connect(const char *ssid, const char *password){
 void runHandler(const char *ssid, const char *password)
 {
   Serial.println();
-  Serial.print("Running in wifi client mode...");
-  for (size_t i = 0; i < 5; i++)
+  Serial.println("Running in wifi client mode...");
+  for (size_t i = 0; i < 50; i++)
   {
     bool connected = connect(ssid, password);
     if (connected){

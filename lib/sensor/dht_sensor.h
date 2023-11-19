@@ -13,7 +13,8 @@ protected:
     } powerMode;
 
 public:
-    DhtSensor(DHT sensor);
+    DhtSensor(int pin);
+    ~DhtSensor();
     int mode();
     void powerLow();
     void powerHigh();
@@ -21,11 +22,16 @@ public:
     float readHumidity();
 };
 
-DhtSensor::DhtSensor(DHT sensor)
+DhtSensor::~DhtSensor()
 {
-    this->dhtSensor = &sensor;
-    this->dhtSensor->begin();
+    delete this->dhtSensor;
+}
+
+DhtSensor::DhtSensor(int pin)
+{
+    this->dhtSensor = new DHT(pin, DHT11);
     this->pin = pin;
+    this->powerHigh();
 }
 
 int DhtSensor::mode()
@@ -42,18 +48,26 @@ void DhtSensor::powerLow()
 void DhtSensor::powerHigh()
 {
     digitalWrite(this->pin, HIGH);
-    // this->dhtSensor.begin();
-    delay(1000);
+    delay(4000);
+    this->dhtSensor->begin();
 }
 
 float DhtSensor::readHumidity()
 {
-    return 0;
-    // return this->dhtSensor.readHumidity();
+    // return 0;
+    float humid = this->dhtSensor->readHumidity();
+    Serial.print("Humidity: ");
+    Serial.print(humid);
+    Serial.println(" %");
+    return humid;
 }
 
 float DhtSensor::readTemp()
 {
-    return 0;
-    // return this->dhtSensor.readTemperature();
+    // return 0;
+    float temp = this->dhtSensor->readTemperature();
+    Serial.print("Temperature: ");
+    Serial.print(temp);
+    Serial.println(" °C");
+    return temp;
 }

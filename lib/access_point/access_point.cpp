@@ -6,6 +6,8 @@
 
 ESP8266WebServer server(80);
 
+void (*restartFunc)(void) = 0;
+
 void handleWifiSettings()
 {
     StaticJsonDocument<MAX_BUFF_SIZE * 3> doc;
@@ -18,7 +20,7 @@ void handleWifiSettings()
     }
     const char *ssid = doc["ssid"];
     int result = write2Eeprom(0, ssid);
-    if (result)
+    if (result >= 0)
     {
         const char *pass = doc["pass"];
         result = write2Eeprom(result, pass);
@@ -26,18 +28,26 @@ void handleWifiSettings()
     }
     const int capacity = JSON_OBJECT_SIZE(1);
     StaticJsonDocument<capacity> respDoc;
-    if (result)
+    int len, status;
+    if (result >= 0)
     {
         respDoc["status"] = "saved";
+        len = measureJson(respDoc);
+        status = 200;
     }
     else
     {
         respDoc["status"] = "error";
+        len = measureJson(respDoc);
+        status = 400;
     }
-    int len = measureJson(respDoc);
     char output[len];
     serializeJson(respDoc, output, sizeof(output));
-    server.send(200, "application/json", output);
+    server.send(status, "application/json", output);
+    if (status == 200)
+    {
+        restartFunc();
+    }
 }
 
 void handleInfoPath()
